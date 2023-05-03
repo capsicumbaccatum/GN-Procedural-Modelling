@@ -57,3 +57,11 @@ via pre-sets of 250 and 500 frames, with respective resolution of the resulting 
 ![image](https://user-images.githubusercontent.com/114761519/236026304-9231c095-b33d-4299-aad6-480ffc8ef6ff.png)
 
 
+#### Instance nodes part 1, detail
+
+![image](https://user-images.githubusercontent.com/114761519/236027004-c2e04dbc-ca43-495b-b329-caf4f8128a4a.png)
+
+
+#### Instance nodes part 2, detail
+![image](https://user-images.githubusercontent.com/114761519/236027301-d40f78c5-63c2-4377-854b-a8824a1a4b60.png)
+
