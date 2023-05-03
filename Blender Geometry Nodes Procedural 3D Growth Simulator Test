@@ -1,0 +1,387 @@
+#######################################
+import bpy
+from rna_prop_ui import PropertyPanel
+import bmesh
+#######################################
+
+# Set-up external light intensity panel in Add-on interface
+class DataButtonsPanel:
+    bl_space_type = 'PROPERTIES'
+    bl_region_type = 'WINDOW'
+    bl_context = "data"
+
+# Works as environmental variable
+    @classmethod
+    def poll(cls, context):
+        engine = context.engine
+        
+        return context.light 
+
+
+# Main simulation classes
+
+class IG(bpy.types.Operator):
+    """Tooltip"""
+    bl_idname = "plant.id"
+    bl_label = "PDMS_1"
+    bl_space_type ="VIEW_3D"
+    bl_region_type = "UI"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    
+# Set-up properties
+# Not applied
+#    curve_end: bpy.props.IntProperty(
+#        name='End',
+#        description = 'Trim curve endpoint',
+#        default = 150,
+#        min=0, # option: soft_min
+#        soft_max=200)
+
+# Assign nodegroup, can be adapted to establish new node system in geometry nodes
+
+    def execute(self, context):
+    
+        modifier = bpy.context.object.modifiers.active
+        nodegroup = modifier.node_group
+        nodeout = nodegroup.nodes['Group Input']
+        nodeout.location = (50,107)
+        nodein = nodegroup.nodes['Group Output']
+        nodein.location = (375,154)
+        
+        # Trim curve assignment
+        TC = nodegroup.nodes("Trim Curve")
+        self.TCe = TC.inputs[4]
+        TC.location = (162,95)
+
+        self.TCe = self.Curve_end
+        
+        return {'FINISHED'}
+    
+    
+    
+    
+#######################################################
+# 
+#######################################################
+# Operator class, simulation 
+
+class DG(bpy.types.Operator):
+    """light"""
+    bl_idname = "lighter.id"
+    bl_label = "light_label"
+    bl_space_type ="VIEW_3D"
+    bl_region_type = "UI"
+    bl_options = {'REGISTER', 'UNDO'}
+
+#  Set-up properties for maximum mesh height & resolution of animation 
+# (10 or 20 seconds: 250 or 500 frames)
+    curve_end: bpy.props.FloatProperty(
+        name='End',
+        description = 'Trim curve endpoint',
+        default = 1,
+        min=0, # option: soft_min
+        soft_max=300)
+    endframe: bpy.props.IntProperty(
+        name='Keying',
+        description = 'growing animation',
+        default = 250,
+        min=2, # option: soft_min
+        soft_max=10000)
+        
+        
+
+# Execute operator, growth simulation formula
+
+
+    def execute(self, context):
+        
+    
+        #######################################
+        # Assign active modifier, main geometry
+        modifier = bpy.context.object.modifiers.active
+        nodegroup = modifier.node_group
+        # Instances_nodegroup = bpy.data.node_groups["plant instances on stem"]
+
+        # Assign instances nodegroup
+        Leaf_nodegr = bpy.data.node_groups["Vein middle"]
+        
+        # Assign reference tool for operator property
+        Reftool = context.scene.Reftool
+
+        # Assign environmental uncoupled variables
+        # Custom properties, placeholder, unlinked
+        Env_variable_1 = Reftool.Batman
+        Env_variable_2 = Reftool.Batman2
+        Env_variable_3 = Reftool.Batman3
+        Env_variable_4 = Reftool.Batman4
+        # Light, included in interface
+        light = Reftool.light
+        # Scene data access lightenergy 
+        bpy.data.lights["Light"].energy = Reftool.light
+        #light = bpy.data.lights["Light"].energy not possible
+        
+
+        
+
+        ########################################
+        
+        # Notes
+        # bpy.data.materials["Material.001"].node_tree.nodes["Emission"].inputs[0].default_value
+        
+
+################## Assignment Bezier transformation #####################
+
+        # Trim Curve - Endpoint Bezier
+        TC = nodegroup.nodes["Trim Curve"]
+        TCe = TC.inputs[4]
+        
+        # Curve radius
+        stemradius = nodegroup.nodes["Curve Circle"].inputs[4]
+
+        # Leaf size
+        # Instances
+        Leaf_param = Leaf_nodegr.nodes["Trim Curve"].inputs[1]
+        # Main nodegroup
+        Leaf_param_2 = nodegroup.nodes["Math.001"].inputs[1]
+
+        # Leaf 2nd instance angle 
+        # mapped 2. instance instances (z axis)
+        Leaf_2_inst_angle = Leaf_nodegr.nodes["Combine XYZ.001"].inputs[2]
+        
+
+        # Additional rotation layer - instance rotator
+        # Instances nodegroup, in source
+        # Instance_rotation_source = instances_nodegroup.
+        # nodes["Rotate Instances.001"].inputs[2].default_value[0]
+        
+        # Projection layer, vector
+        Instance_rotation_projection_x = nodegroup.nodes["Combine XYZ.001"].inputs[0].default_value
+        Instance_rotation_projection_y = nodegroup.nodes["Combine XYZ.001"].inputs[1].default_value
+        Instance_rotation_projection_z = nodegroup.nodes["Combine XYZ.001"].inputs[2].default_value
+        
+
+        # Initialize dependencies
+        stemradius_initial = (Env_variable_2 / Env_variable_1) + 0.2
+        stemradius.default_value = stemradius_initial
+        
+        # Bezier endpoint, set as property
+        TCe.default_value = self.curve_end 
+        
+        # Leaf shape based on istances - Two coupled beziers
+        # Toleranzen: 1 --> 0.5
+        Leaf_param.default_value = 1 # WHY
+        Leaf_param_EX = Leaf_param.default_value
+        
+        # Leaf size instances on stem
+        # Log scale! Toleranzen: 0.35 - ca 0.5
+        Leaf_param_2_initial = 0.351
+        Leaf_param_2.default_value = Leaf_param_2_initial
+        
+        # Leaf 2nd instance angle
+        # Toleranzen: 0 --> +/- 360°
+        Leaf_2_inst_angle_initial = 0
+        Leaf_2_inst_angle.default_value = Leaf_2_inst_angle_initial
+   
+################## Assignment scene relations #####################
+           
+        #############################           
+        # Initialize start keyframe
+        TCe.keyframe_insert('default_value',frame=1)
+        Leaf_param.keyframe_insert('default_value',frame=1)
+        stemradius.keyframe_insert('default_value',frame=1)
+        Leaf_2_inst_angle.keyframe_insert('default_value',frame=1)
+        Leaf_param_2.keyframe_insert('default_value',frame=1)
+        ##############################
+        
+        # Linked properties
+        # Linked object in scene, assignment as internal variable
+        # Links scale of external object to variable
+        # In progress
+        bpy.data.objects["Object"].scale[0] = Reftool.objscale
+
+        if Reftool.objscale <= 3:
+            Factor = 1
+        if Reftool.objscale > 3:
+            Factor = 5
+        
+################## Simulation #####################        
+        
+        ####################################
+        # stem growth formula
+        ####################################
+        
+        # Incl light intensity threshold  
+        # TCe.default_value range (1, 70)
+        
+        if light <= 1500:
+            TCe.default_value = light * (0.025*stemradius.default_value) + (Env_variable_1/Env_variable_2) - Factor 
+            # defaults
+            Leaf_param.default_value = Leaf_param_EX - 0.5
+            Leaf_param_2.default_value = 0.8  
+            stemradius_final = stemradius_initial +0.2
+            Leaf_2_inst_angle.default_value = 50
+            
+            #  = 1500 * (0.025 * 0.7) + (2/2) - 5
+        #   Maximum height    = light * (internal factor * initial stemradius) +  (variable/variable2) - external property factor
+        # Note: External property factor refers to properties of ecternal objects, e.g., scale of another mesh.
+        
+        if light >= 1500:
+            TCe.default_value = (light/stemradius.default_value) * (0.025*stemradius.default_value) - (Env_variable_3**(Env_variable_4)) + Factor
+            Leaf_param.default_value = Leaf_param_EX - 0.8
+            stemradius_final = stemradius_initial +0.5
+            Leaf_param_2.default_value = 0.5
+            Leaf_2_inst_angle.default_value = 0
+
+        stemradius.default_value = stemradius_final
+        
+        
+##################################
+        Leaf_param.keyframe_insert('default_value',frame=self.endframe)
+        Leaf_param_2.keyframe_insert('default_value',frame=self.endframe)
+        Leaf_2_inst_angle.keyframe_insert('default_value',frame=self.endframe)
+#################################
+
+        #InstRo_Z.default_value = 
+#        VertY.default_value = (1/TCe.default_value) + (light*10)**(-Env_variable_4) 
+#        VertZ.default_value = (1/TCe.default_value) - (light*10)**(-Env_variable_4)
+        ####################################
+        
+        # end keyframe insert
+        TCe.keyframe_insert('default_value',frame=self.endframe)
+#        VertEX.keyframe_insert('default_value',frame=self.endframe)
+##        VertY.keyframe_insert('default_value',frame=self.endframe)
+#        VertZ.keyframe_insert('default_value',frame=self.endframe)
+
+        return {'FINISHED'}
+ 
+####################################################
+
+
+## Setup intern properties for GUI
+####################################################
+
+class Environment(bpy.types.PropertyGroup):
+
+    light: bpy.props.FloatProperty(
+        name='Light intensity',
+        description = 'set light energy',
+        default = 1000,
+        min=2, # option: soft_min
+        soft_max=1000000)
+    bl_options = {'REGISTER', 'UNDO'}
+
+############################################
+
+    Batman: bpy.props.IntProperty(
+        name='Environmental variable 1',
+        description = 'Batman1',
+        default = 1,
+        min=1, # option: soft_min
+        soft_max=10)
+    bl_options = {'REGISTER', 'UNDO'}        
+        
+    Batman2: bpy.props.IntProperty(
+        name='Environmental variable 2',
+        description = 'Batman2',
+        default = 1,
+        min=1, # option: soft_min
+        soft_max=10)
+    bl_options = {'REGISTER', 'UNDO'} 
+    
+    Batman3: bpy.props.IntProperty(
+        name='Environmental variable 3',
+        description = 'Batman3',
+        default = 1,
+        min=1, # option: soft_min
+        soft_max=10)
+    bl_options = {'REGISTER', 'UNDO'}     
+    
+    Batman4: bpy.props.FloatProperty(
+        name='Environmental variable 4',
+        description = 'Batman4',
+        default = 0.1,
+        min=0, # option: soft_min
+        soft_max=100)
+    bl_options = {'REGISTER', 'UNDO'} 
+    
+###########################################
+    
+    objscale: bpy.props.FloatProperty(
+        name='Factor - Scale of external mesh',
+        description = 'Scale external object',
+        default = 1,
+        min=1, # option: soft_min
+        soft_max=10)
+    bl_options = {'REGISTER', 'UNDO'} 
+    
+bpy.utils.register_class(Environment)
+bpy.types.Scene.Reftool = bpy.props.PointerProperty(type=Environment, name='Light')
+
+
+# GUI
+## Tutorial 1 general interface operations: https://www.youtube.com/watch?v=cyt0O7saU4Q
+####################################################        
+         
+class panel (bpy.types.Panel):
+    """Tooltip"""
+    bl_idname = "panel"
+    bl_label = "Growth simulation version 0.2"
+    bl_space_type ="VIEW_3D"
+    bl_region_type = "UI"
+
+    
+    def draw(self, context):
+
+        layout = self.layout
+        col = layout.column(align = True)
+        row = layout.row
+        Reftool = context.scene.Reftool
+
+####################################################
+# Intern specifications
+
+        props = col.operator('lighter.id',
+            text = 'Simulation - low resolution.',
+            icon = "TIME")
+        props.endframe = 250    
+        
+        props = col.operator('lighter.id',
+            text = 'Simulation - high resolution.',
+            icon = "GHOST_ENABLED")
+        props.endframe = 500 
+        
+####################################################
+# Custom specifications
+       
+        layout.prop(Reftool, 'light')
+        layout.prop(Reftool, 'Batman')
+        layout.prop(Reftool, 'Batman2')
+        layout.prop(Reftool, 'Batman3')
+        layout.prop(Reftool, 'Batman4')
+        layout.prop(Reftool, 'Batman5')
+        layout.prop(Reftool, 'objscale')
+        
+####################################################
+
+classes = [ IG, panel, DG] 
+
+def register():
+    for cls in classes:
+        bpy.utils.register_class(cls)
+
+        
+def unregister():
+    for cls in classes:
+        bpy.utils.unregister_class(cls)
+        del bpy.types.Scene.Reftool
+        
+  
+if __name__ == "__main__":
+        register()
+      
+  
+ 
+ 
+ 
+ 
