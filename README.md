@@ -5,6 +5,8 @@ Tests &amp; Drafts for Procedural Geometry Node Modelling Add-ons in Blender 3.3
 
 ### Dependencies
 bpy
+rna_prop_ui,  PropertyPanel
+bmesh
 
 ### Input
 
