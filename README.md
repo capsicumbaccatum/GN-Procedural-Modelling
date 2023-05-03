@@ -44,11 +44,16 @@ transferred to other procedural models.
 This addon generates an animation, start- and end-position of keyframes is adjustable
 via pre-sets of 250 and 500 frames, with respective resolution of the resulting animation.
 
+#### V 0.2
 
 ![Image](https://user-images.githubusercontent.com/114761519/236008286-747ae868-5698-423f-8e08-ae7084b8c712.png)
 
+#### Mesh, as bezier
 
 ![Image](https://user-images.githubusercontent.com/114761519/236008857-3055740f-9e23-4ad9-ad46-d4349a49ef40.png)
 
+#### Leaf, mapped as instances on bezier. 
+
+![image](https://user-images.githubusercontent.com/114761519/236026304-9231c095-b33d-4299-aad6-480ffc8ef6ff.png)
 
 
